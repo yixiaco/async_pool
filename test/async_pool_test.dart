@@ -1,7 +1,6 @@
 import 'dart:io';
 
-import 'package:isolate_pool/isolate_pool.dart';
-
+import 'package:async_pool/async_pool.dart';
 
 void main() async {
   /*
@@ -16,7 +15,7 @@ void main() async {
       maximumPoolSize: Platform.numberOfProcessors, keepActiveTime: 1);
   List<CompletableIsolate> list = List.generate(10000, (index) => index)
       .map((index) => CompletableIsolate.runAsync(test, index,
-      isolateExecutor: isolateExecutor))
+          isolateExecutor: isolateExecutor))
       .toList();
   // for (var value in list) {
   //   value.cancel();

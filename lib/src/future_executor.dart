@@ -7,19 +7,43 @@ typedef AsyncRun = Future Function();
 
 /// 提供最大并发执行数的Future队列，防止并发突破内存溢出
 class CompletableFuture<T> {
+  /// 异步任务运行结果
   T? result;
+
+  /// 是否完成
   bool isComplete = false;
+
+  /// 错误信息
   dynamic error;
+
+  /// 错误堆栈
   StackTrace? stackTrace;
+
+  /// 是否发生错误
   bool isError = false;
+
+  /// 公共Future线程池
   static FutureExecutor _futureExecutor = FutureExecutor();
+
+  /// 完成回调
   List<VoidCallback>? _callback;
+
+  /// 错误回调
   List<Function>? _onError;
+
+  /// 无论是否发生错误，都触发回调
   List<Function>? _onComplete;
+
+  /// 取消回调
   List<Function>? _onCancel;
+
+  /// 是否正在运行
   bool _isRun = false;
+
+  /// 是否取消
   bool _isCancel = false;
 
+  /// 执行一个异步任务
   static CompletableFuture<T> runAsync<T>(AsyncRun run,
       {FutureExecutor? futureExecutor}) {
     CompletableFuture<T> completableFuture = CompletableFuture<T>();
@@ -177,6 +201,7 @@ class CompletableFuture<T> {
 
 /// 限制Future最大执行量，提交Future，等待安排执行任务
 class FutureExecutor {
+  /// 最大同时提交任务数
   final int maxSize;
 
   /// 等待队列
@@ -218,6 +243,7 @@ class FutureExecutor {
     }
   }
 
+  ///当前活跃的Future
   int getActiveFuture() => _currentRun;
 
   /// 清空所有等待中的任务队列

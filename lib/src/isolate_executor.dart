@@ -8,6 +8,7 @@ typedef ComputeCallback<Q, R> = FutureOr<R> Function(Q message);
 typedef ComputeCallback0<Q> = FutureOr<void> Function(Q message);
 typedef VoidCallback<T> = void Function(T t);
 
+/// 退出标识
 const _exitFlag = 'exit';
 
 /// 异步执行支持
@@ -51,6 +52,7 @@ class CompletableIsolate<T> {
   late IsolateExecutor _isolateExecutor0;
 
   /// 执行一个异步任务
+  /// 该任务必须是一个全局方法或者静态方法
   static CompletableIsolate<T> runAsync<Q, T>(
     ComputeCallback<Q, T> run,
     Q message, {
@@ -72,7 +74,8 @@ class CompletableIsolate<T> {
     final ReceivePort errorPort = ReceivePort();
     Timeline.finishSync();
     // 提交任务
-    completableFuture._asyncId = isolateExecutor.execute<_CompletableIsolateConfiguration<Q, T>>(
+    completableFuture._asyncId =
+        isolateExecutor.execute<_CompletableIsolateConfiguration<Q, T>>(
       CompletableIsolate._run,
       _CompletableIsolateConfiguration<Q, T>(
         callback: run,
@@ -195,7 +198,8 @@ class CompletableIsolate<T> {
   }
 
   /// 等待所有任务完成
-  static Future<List<CompletableIsolate<T>>> join<T>(List<CompletableIsolate<T>> completableIsolate) async {
+  static Future<List<CompletableIsolate<T>>> join<T>(
+      List<CompletableIsolate<T>> completableIsolate) async {
     Completer<List<CompletableIsolate<T>>> completer = Completer();
     if (completableIsolate.isEmpty) {
       completer.complete();
@@ -233,7 +237,8 @@ class CompletableIsolate<T> {
   }
 
   /// 执行任务
-  static void _run<T, R>(_CompletableIsolateConfiguration<T, R> configuration) async {
+  static void _run<T, R>(
+      _CompletableIsolateConfiguration<T, R> configuration) async {
     try {
       final R result = await Timeline.timeSync(
         configuration.debugLabel,
@@ -362,7 +367,10 @@ class IsolateExecutor {
   }
 
   /// 新增线程
-  Future<void> _addIsolate<Q>(_IsolateConfiguration _isolateConfiguration, bool isCore) async {
+  Future<void> _addIsolate<Q>(
+    _IsolateConfiguration _isolateConfiguration,
+    bool isCore,
+  ) async {
     activeThread++;
     var exitPort = ReceivePort();
     var resultPort = ReceivePort();
@@ -421,7 +429,9 @@ class IsolateExecutor {
   /// 通知执行任务
   void _notify() {
     if (!_shop) {
-      var idleWorks = _works.values.where((element) => !element.isRun && !element.isExit).toList();
+      var idleWorks = _works.values
+          .where((element) => !element.isRun && !element.isExit)
+          .toList();
       // 查询空闲的线程是否满足执行所有任务
       for (var work in idleWorks) {
         if (_isolateConfiguration.isNotEmpty) {
@@ -512,7 +522,6 @@ class _WorkConfiguration {
 
 /// 执行任务
 class _IsolateConfiguration<Q> {
-
   const _IsolateConfiguration(this.id, this.callback, this.message);
 
   /// 任务id
