@@ -1,0 +1,10 @@
+name: isolate_pool
+description: A future and isolate thread pool project
+version: 0.1.0
+homepage: https://github.com/yixiaco/isolate_pool
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+
+dev_dependencies:
+  test: ^1.16.3
