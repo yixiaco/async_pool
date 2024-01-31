@@ -23,7 +23,7 @@ class CompletableFuture<T> {
   bool isError = false;
 
   /// 公共Future线程池
-  static FutureExecutor _futureExecutor = FutureExecutor();
+  static final FutureExecutor _futureExecutor = FutureExecutor();
 
   /// 完成回调
   List<VoidCallback>? _callback;
@@ -47,9 +47,7 @@ class CompletableFuture<T> {
   static CompletableFuture<T> runAsync<T>(AsyncRun run,
       {FutureExecutor? futureExecutor}) {
     CompletableFuture<T> completableFuture = CompletableFuture<T>();
-    if (futureExecutor == null) {
-      futureExecutor = _futureExecutor;
-    }
+    futureExecutor ??= _futureExecutor;
     futureExecutor.execute(() async {
       try {
         if (!completableFuture._isCancel) {
@@ -72,9 +70,9 @@ class CompletableFuture<T> {
   /// 正确执行回调
   void _runCallback() {
     if (_callback != null && _callback!.isNotEmpty) {
-      _callback!.forEach((element) {
+      for (var element in _callback!) {
         element(result);
-      });
+      }
       _callback!.clear();
     }
   }
@@ -83,13 +81,13 @@ class CompletableFuture<T> {
   void _errorCallback() {
     isError = true;
     if (_onError != null && _onError!.isNotEmpty) {
-      _onError!.forEach((element) {
+      for (var element in _onError!) {
         try {
           element(error, stackTrace);
         } catch (e) {
           print(e);
         }
-      });
+      }
       _onError!.clear();
     }
   }
@@ -98,7 +96,9 @@ class CompletableFuture<T> {
   void _completeCallback() {
     isComplete = true;
     if (_onComplete != null && _onComplete!.isNotEmpty) {
-      _onComplete!.forEach((element) => element());
+      for (var element in _onComplete!) {
+        element();
+      }
       _onComplete!.clear();
     }
   }
@@ -108,8 +108,9 @@ class CompletableFuture<T> {
     if (isComplete) {
       if (isError && onError != null) {
         onError(error);
-      } else
+      } else {
         onValue(result);
+      }
     } else {
       (_callback ??= []).add(onValue);
       if (onError != null) {
@@ -119,7 +120,7 @@ class CompletableFuture<T> {
   }
 
   /// 无论是否完成，都发生回调事件
-  void whenComplete(FutureOr<void> action()) {
+  void whenComplete(FutureOr<void> Function() action) {
     if (isComplete) {
       // 如果已经完成任务，则立即触发事件
       action();
@@ -128,7 +129,7 @@ class CompletableFuture<T> {
   }
 
   /// 取消事件
-  void onCancel(FutureOr<void> action()) {
+  void onCancel(FutureOr<void> Function() action) {
     if (!isComplete) {
       (_onCancel ??= []).add(action);
     }
@@ -178,7 +179,9 @@ class CompletableFuture<T> {
       isComplete = true;
       Future(() {
         if (_onCancel != null && _onCancel!.isNotEmpty) {
-          _onCancel!.forEach((element) => element());
+          for (var element in _onCancel!) {
+            element();
+          }
           _onCancel!.clear();
         }
       });

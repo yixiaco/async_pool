@@ -29,7 +29,7 @@ class CompletableIsolate<T> {
   bool isError = false;
 
   /// 公共线程池配置
-  static IsolateExecutor _isolateExecutor = IsolateExecutor(
+  static final IsolateExecutor _isolateExecutor = IsolateExecutor(
     maximumPoolSize: Platform.numberOfProcessors * 2,
   );
 
@@ -62,9 +62,7 @@ class CompletableIsolate<T> {
     CompletableIsolate<T> completableFuture = CompletableIsolate<T>();
 
     ///初始化线程池
-    if (isolateExecutor == null) {
-      isolateExecutor = _isolateExecutor;
-    }
+    isolateExecutor ??= _isolateExecutor;
     completableFuture._isolateExecutor0 = isolateExecutor;
 
     /// 时间切片
@@ -113,9 +111,9 @@ class CompletableIsolate<T> {
   /// 正确执行回调
   void _runCallback() {
     if (_callback != null && _callback!.isNotEmpty) {
-      _callback!.forEach((element) {
+      for (var element in _callback!) {
         element(result);
-      });
+      }
       _callback!.clear();
     }
   }
@@ -124,13 +122,13 @@ class CompletableIsolate<T> {
   void _errorCallback() {
     isError = true;
     if (_onError != null && _onError!.isNotEmpty) {
-      _onError!.forEach((element) {
+      for (var element in _onError!) {
         try {
           element(error, stackTrace);
         } catch (e) {
           print(e);
         }
-      });
+      }
       _onError!.clear();
     }
   }
@@ -139,7 +137,9 @@ class CompletableIsolate<T> {
   void _completeCallback() {
     isComplete = true;
     if (_onComplete != null && _onComplete!.isNotEmpty) {
-      _onComplete!.forEach((element) => element());
+      for (var element in _onComplete!) {
+        element();
+      }
       _onComplete!.clear();
     }
   }
@@ -149,8 +149,9 @@ class CompletableIsolate<T> {
     if (isComplete) {
       if (isError && onError != null) {
         onError(error);
-      } else
+      } else {
         onValue(result);
+      }
     } else {
       (_callback ??= []).add(onValue);
       if (onError != null) {
@@ -160,7 +161,7 @@ class CompletableIsolate<T> {
   }
 
   /// 无论是否完成，都发生回调事件
-  void whenComplete(FutureOr<void> action()) {
+  void whenComplete(FutureOr<void> Function() action) {
     if (isComplete) {
       // 如果已经完成任务，则立即触发事件
       action();
@@ -169,7 +170,7 @@ class CompletableIsolate<T> {
   }
 
   /// 取消事件
-  void onCancel(FutureOr<void> action()) {
+  void onCancel(FutureOr<void> Function() action) {
     if (!isComplete) {
       (_onCancel ??= []).add(action);
     }
@@ -218,7 +219,9 @@ class CompletableIsolate<T> {
     if (result) {
       isComplete = true;
       if (_onCancel != null && _onCancel!.isNotEmpty) {
-        _onCancel!.forEach((element) => element());
+        for (var element in _onCancel!) {
+          element();
+        }
         _onCancel!.clear();
       }
     }
@@ -300,7 +303,7 @@ class IsolateExecutor {
   final int keepActiveTime;
 
   /// 保存所有待运行或者运行中的任务
-  final Map<String, _Work> _works = Map();
+  final Map<String, _Work> _works = {};
 
   /// 线程id
   static int _isolateId = 0;
@@ -357,19 +360,19 @@ class IsolateExecutor {
 
   /// 新增线程
   Future<void> _addIsolate<Q>(
-    _IsolateConfiguration _isolateConfiguration,
+    _IsolateConfiguration isolateConfiguration,
     bool isCore,
   ) async {
     activeThread++;
     var exitPort = ReceivePort();
     var resultPort = ReceivePort();
-    _Work _work = _Work(
+    _Work work = _Work(
       isCore: isCore,
       exitPort: exitPort,
       resultPort: resultPort,
     );
     String debugName = '${executorName}_${++_isolateId}';
-    Isolate _isolate = await Isolate.spawn(
+    Isolate isolate = await Isolate.spawn(
       _spawn,
       _WorkConfiguration(
         resultPort: resultPort.sendPort,
@@ -380,26 +383,26 @@ class IsolateExecutor {
       debugName: debugName,
     );
     exitPort.listen((message) {
-      _work.isExit = true;
+      work.isExit = true;
       activeThread--;
       _works.remove(debugName);
     });
-    _work.isolate = _isolate;
+    work.isolate = isolate;
     resultPort.listen((message) {
       if (message is SendPort) {
         /// 获取通信对象
-        _work.receivePort = message;
-        _work.isRun = true;
-        _works[debugName] = _work;
-        _work.send(_isolateConfiguration);
+        work.receivePort = message;
+        work.isRun = true;
+        _works[debugName] = work;
+        work.send(isolateConfiguration);
       } else if (message == _exitFlag) {
         // 退出
         _works.remove(debugName);
-        _work.dismiss();
+        work.dismiss();
         activeThread--;
       } else if (message is int) {
         // 任务执行结束
-        _work.isRun = false;
+        work.isRun = false;
       }
       _notify();
     });
@@ -474,9 +477,9 @@ class _Work {
   });
 
   /// 给线程发送一个任务
-  void send(_IsolateConfiguration _isolateConfiguration) {
+  void send(_IsolateConfiguration isolateConfiguration) {
     isRun = true;
-    receivePort!.send(_isolateConfiguration);
+    receivePort!.send(isolateConfiguration);
   }
 
   /// 强制关闭该线程
@@ -525,7 +528,7 @@ class _IsolateConfiguration<Q> {
 }
 
 /// 执行方法
-Future<void> _spawn(_WorkConfiguration _workConfiguration) async {
+Future<void> _spawn(_WorkConfiguration workConfiguration) async {
   ReceivePort receivePort = ReceivePort();
   bool isRun = false;
   int keepActiveTime = 0;
@@ -539,21 +542,21 @@ Future<void> _spawn(_WorkConfiguration _workConfiguration) async {
       } catch (e) {
         print(e);
       }
-      _workConfiguration.resultPort.send(message.id);
+      workConfiguration.resultPort.send(message.id);
       isRun = false;
     }
   });
-  _workConfiguration.resultPort.send(receivePort.sendPort);
-  if (!_workConfiguration.isCore) {
+  workConfiguration.resultPort.send(receivePort.sendPort);
+  if (!workConfiguration.isCore) {
     // 每一秒检查是否在运行，如果不在运行，超出空闲时间，且不是核心线程，则关闭该线程
     Timer.periodic(Duration(seconds: 1), (timer) {
       if (!isRun) {
         keepActiveTime++;
       }
-      if (keepActiveTime > _workConfiguration.keepActiveTime && !isRun) {
+      if (keepActiveTime > workConfiguration.keepActiveTime && !isRun) {
         timer.cancel();
         receivePort.close();
-        _workConfiguration.resultPort.send(_exitFlag);
+        workConfiguration.resultPort.send(_exitFlag);
       }
     });
   }

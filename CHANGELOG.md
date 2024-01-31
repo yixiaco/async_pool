@@ -1,3 +1,7 @@
+## 0.2.0
+
+* use the lints check code
+
 ## 0.1.1
 
 * The error message for canceling a task is fixed
