@@ -13,20 +13,23 @@ void main() async {
   print(fs.map((e) => e.result).length);*/
   IsolateExecutor isolateExecutor = IsolateExecutor(
       maximumPoolSize: Platform.numberOfProcessors, keepActiveTime: 1);
-  List<CompletableIsolate> list = List.generate(10000, (index) => index)
+  List<CompletableIsolate> list = List.generate(100, (index) => index)
       .map((index) => CompletableIsolate.runAsync(test, index,
           isolateExecutor: isolateExecutor))
       .toList();
-  // for (var value in list) {
-  //   value.cancel();
-  // }
+  for (var value in list) {
+    value.then((t) {
+      print(t);
+    });
+    // value.cancel();
+  }
   await CompletableIsolate.join(list);
   print(list.map((e) => e.result).where((element) => element != null).length);
 }
 
 Future<String> test(int index) async {
-  await Future.delayed(Duration(milliseconds: 100));
+  await Future.delayed(Duration(milliseconds: 200));
   String p = '$index ${DateTime.now()}';
-  print(p);
+  // print(p);
   return p;
 }

@@ -111,15 +111,9 @@ class CompletableFuture<T> {
       } else
         onValue(result);
     } else {
-      if (_callback == null) {
-        _callback = [];
-      }
-      _callback!.add(onValue);
+      (_callback ??= []).add(onValue);
       if (onError != null) {
-        if (_onError == null) {
-          _onError = [];
-        }
-        _onError!.add(onError);
+        (_onError ??= []).add(onError);
       }
     }
   }
@@ -129,19 +123,14 @@ class CompletableFuture<T> {
     if (isComplete) {
       // 如果已经完成任务，则立即触发事件
       action();
-    } else if (_onComplete == null) {
-      _onComplete = [];
     }
-    _onComplete!.add(action);
+    (_onComplete ??= []).add(action);
   }
 
   /// 取消事件
   void onCancel(FutureOr<void> action()) {
     if (!isComplete) {
-      if (_onCancel == null) {
-        _onCancel = [];
-      }
-      _onCancel!.add(action);
+      (_onCancel ??= []).add(action);
     }
   }
 
@@ -150,7 +139,7 @@ class CompletableFuture<T> {
       List<CompletableFuture<T>>? fs) async {
     Completer<List<CompletableFuture<T>>> completer = Completer();
     if (fs == null || fs.isEmpty) {
-      completer.complete();
+      completer.complete([]);
     }
     int count = fs!.length;
     List<int> ids = [];

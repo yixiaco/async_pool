@@ -9,7 +9,7 @@ typedef ComputeCallback0<Q> = FutureOr<void> Function(Q message);
 typedef VoidCallback<T> = void Function(T t);
 
 /// 退出标识
-const _exitFlag = 'exit';
+const _exitFlag = '\$1';
 
 /// 异步执行支持
 class CompletableIsolate<T> {
@@ -152,15 +152,9 @@ class CompletableIsolate<T> {
       } else
         onValue(result);
     } else {
-      if (_callback == null) {
-        _callback = [];
-      }
-      _callback!.add(onValue);
+      (_callback ??= []).add(onValue);
       if (onError != null) {
-        if (_onError == null) {
-          _onError = [];
-        }
-        _onError!.add(onError);
+        (_onError ??= []).add(onError);
       }
     }
   }
@@ -170,19 +164,14 @@ class CompletableIsolate<T> {
     if (isComplete) {
       // 如果已经完成任务，则立即触发事件
       action();
-    } else if (_onComplete == null) {
-      _onComplete = [];
     }
-    _onComplete!.add(action);
+    (_onComplete ??= []).add(action);
   }
 
   /// 取消事件
   void onCancel(FutureOr<void> action()) {
     if (!isComplete) {
-      if (_onCancel == null) {
-        _onCancel = [];
-      }
-      _onCancel!.add(action);
+      (_onCancel ??= []).add(action);
     }
   }
 
@@ -202,7 +191,7 @@ class CompletableIsolate<T> {
       List<CompletableIsolate<T>> completableIsolate) async {
     Completer<List<CompletableIsolate<T>>> completer = Completer();
     if (completableIsolate.isEmpty) {
-      completer.complete();
+      completer.complete([]);
     }
     int count = completableIsolate.length;
     List<int> ids = [];
@@ -467,10 +456,10 @@ class _Work {
   final bool isCore;
 
   /// 代表线程对象
-  Isolate? isolate;
+  late Isolate? isolate;
 
   /// 发送给线程的消息通道
-  SendPort? receivePort;
+  late SendPort? receivePort;
 
   /// 是否退出
   bool isExit = false;
@@ -481,9 +470,7 @@ class _Work {
   _Work({
     required this.isCore,
     required this.resultPort,
-    this.receivePort,
     required this.exitPort,
-    this.isolate,
   });
 
   /// 给线程发送一个任务
