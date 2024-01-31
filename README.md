@@ -1,4 +1,4 @@
-# async_pool [![pub package](https://img.shields.io/badge/pub-v0.1.0-blue.svg)](https://pub.dev/packages/async_pool)
+# async_pool [![pub package](https://img.shields.io/badge/pub-v0.1.1-blue.svg)](https://pub.dev/packages/async_pool)
 
 A future and async thread pool project.has a syntax similar to CompletableFuture in java
 
