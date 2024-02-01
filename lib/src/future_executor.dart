@@ -143,7 +143,7 @@ class CompletableFuture<T> {
       completer.complete([]);
     }
     int count = fs!.length;
-    List<int> ids = [];
+    Set<int> ids = {};
     for (var f in fs) {
       void sub() {
         if (!ids.contains(f.hashCode)) {
@@ -215,7 +215,7 @@ class FutureExecutor {
   }
 
   /// 批量执行任务
-  void executeList(List<AsyncRun> runs) {
+  void executeAll(Iterable<AsyncRun> runs) {
     for (var run in runs) {
       execute(run);
     }

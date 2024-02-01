@@ -1,3 +1,7 @@
+## 0.2.1
+
+* Optimize use
+
 ## 0.2.0
 
 * use the lints check code

@@ -1,6 +1,6 @@
 name: async_pool
 description: A future and async thread pool project.has a syntax similar to CompletableFuture in java
-version: 0.2.0
+version: 0.2.1
 homepage: https://github.com/yixiaco/async_pool
 
 environment:

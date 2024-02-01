@@ -188,14 +188,14 @@ class CompletableIsolate<T> {
   }
 
   /// 等待所有任务完成
-  static Future<List<CompletableIsolate<T>>> join<T>(
-      List<CompletableIsolate<T>> completableIsolate) async {
-    Completer<List<CompletableIsolate<T>>> completer = Completer();
+  static Future<Iterable<CompletableIsolate<T>>> join<T>(
+      Iterable<CompletableIsolate<T>> completableIsolate) async {
+    Completer<Iterable<CompletableIsolate<T>>> completer = Completer();
     if (completableIsolate.isEmpty) {
-      completer.complete([]);
+      completer.complete(Iterable.empty());
     }
     int count = completableIsolate.length;
-    List<int> ids = [];
+    Set<int> ids = {};
     for (var f in completableIsolate) {
       void sub() {
         if (!ids.contains(f.hashCode)) {
